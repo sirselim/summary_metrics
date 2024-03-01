@@ -19,10 +19,12 @@ fn calculate_n50(lengths: &mut Vec<usize>) -> usize {
 
 fn print_help() {
     println!("Usage: <input_file> <minimum_length_threshold>");
+    println!("<input_file>                  Nanopore sequencing summary text file");
+    println!("<minimum_length_threshold>    length to filter for statistics");
     println!("Options:");
-    println!("  -h, --help       Print this help message");
-    println!("  -v, --version    Print version information");
-    println!("  --json           Output result to JSON file");
+    println!("  -h, --help                  Print this help message");
+    println!("  -v, --version               Print version information");
+    println!("  --json                      Output result to JSON file");
 }
 
 fn print_version() {
