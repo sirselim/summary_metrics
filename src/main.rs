@@ -20,12 +20,37 @@ fn calculate_n50(lengths: &mut Vec<usize>) -> usize {
     0 // N50 not found
 }
 
+fn print_help() {
+    println!("Usage: <input_file> <minimum_length_threshold>");
+    println!("<input_file>                  Nanopore sequencing summary text file");
+    println!("<minimum_length_threshold>    length to filter for statistics");
+    println!("Options:");
+    println!("  -h, --help                  Print this help message");
+    println!("  -v, --version               Print version information");
+}
+
+fn print_version() {
+    println!("summary_metrics version {}", env!("CARGO_PKG_VERSION"));
+}
+
 fn main() {
     // Parse command line arguments
     let args: Vec<String> = env::args().collect();
     if args.len() != 3 {
-        eprintln!("Usage: {} <input_file> <minimum_length_threshold>", &args[0]);
-        std::process::exit(1);
+        match args.len() {
+            2 if (args[1] == "-h" || args[1] == "--help") => {
+                print_help();
+                return;
+            }
+            2 if (args[1] == "-v" || args[1] == "--version") => {
+                print_version();
+                return;
+            }
+            _ => {
+                eprintln!("Invalid number of arguments. Use -h or --help for usage information.");
+                std::process::exit(1);
+            }
+        }
     }
     let input_file = &args[1];
     let min_length_threshold: usize = args[2].parse().expect("Invalid minimum length threshold");
