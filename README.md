@@ -22,8 +22,8 @@ Before using this tool, ensure you have the following installed on your system:
 
 ### pre-compiled binaries
 
-* summary_metrics-0.1.0-linux-x64
-* summary_metrics-0.1.0-osx-arm
+- [summary_metrics-0.1.0-linux-x64](https://github.com/sirselim/summary_metrics/blob/main/binaries/summary_metrics-0.1.0-linux-x64.tar.gz)
+- [summary_metrics-0.1.0-osx-arm](https://github.com/sirselim/summary_metrics/blob/main/binaries/summary_metrics-0.1.0-osx-arm64.tar.gz)
 
 ### from source
 
