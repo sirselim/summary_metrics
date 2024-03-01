@@ -20,6 +20,13 @@ Before using this tool, ensure you have the following installed on your system:
 
 ## Installation
 
+### pre-compiled binaries
+
+* summary_metrics-0.1.0-linux-x64
+* summary_metrics-0.1.0-osx-arm
+
+### from source
+
 To build this tool from source, follow these steps:
 
 1. Clone this repository:

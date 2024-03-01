@@ -3,9 +3,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::collections::HashMap;
 
-const BARCODE_INDEX: usize = 26;
-const READ_LENGTH_INDEX: usize = 15;
-
 fn calculate_n50(lengths: &mut Vec<usize>) -> usize {
     lengths.sort_unstable_by(|a, b| b.cmp(a));
     let total_bases: usize = lengths.iter().sum();
@@ -55,9 +52,12 @@ fn main() {
     let input_file = &args[1];
     let min_length_threshold: usize = args[2].parse().expect("Invalid minimum length threshold");
 
-    // Read input file and calculate statistics
+    // Open the file
     let file = File::open(input_file).expect("Failed to open input file");
-    let reader = BufReader::new(file);
+
+    // Clone the file before creating BufReader
+    let cloned_file = file.try_clone().expect("Failed to clone File");
+    let reader = BufReader::new(cloned_file);
 
     let mut total_gigabases = 0.0;
     let mut total_gigabases_with_barcode = 0.0;
@@ -67,27 +67,48 @@ fn main() {
     let mut most_prevalent_barcode = HashMap::new();
     let mut lengths = Vec::new(); // No need for pre-allocation here
 
+    // Mapping of column headers to their positions
+    let mut column_mapping = HashMap::new();
+
+    // Process the header line to determine column positions
+    let reader_clone = BufReader::new(file.try_clone().expect("Failed to clone File"));
+    if let Some(header_line) = reader_clone.lines().next() {
+        let header_line = header_line.expect("Failed to read header line");
+        let headers: Vec<&str> = header_line.split('\t').collect();
+        for (index, header) in headers.iter().enumerate() {
+            column_mapping.insert(header.to_string(), index);
+        }
+    }
+
+    // Determine the positions of columns of interest
+    let passes_filtering_index = *column_mapping.get("passes_filtering").expect("Column 'passes_filtering' not found");
+    let sequence_length_index = *column_mapping.get("sequence_length_template").expect("Column 'sequence_length_template' not found");
+    let barcode_arrangement_index = *column_mapping.get("barcode_arrangement").expect("Column 'barcode_arrangement' not found");
+
+    // Process subsequent lines using the determined column positions
     for line in reader.lines().skip(1) {
         let line = line.expect("Failed to read line");
         let fields: Vec<&str> = line.split('\t').collect();
-        let barcode = fields[BARCODE_INDEX];
-        let length: usize = fields[READ_LENGTH_INDEX].parse().expect("Invalid read length");
-        let pass = fields[11] == "TRUE";
 
-        if pass {
-            total_gigabases += length as f64 / 1_000_000_000.0;
-            lengths.push(length);
+        // Access data using the dynamically determined column positions
+        let passes_filtering = fields[passes_filtering_index] == "TRUE";
+        let sequence_length: usize = fields[sequence_length_index].parse().expect("Invalid sequence length");
+        let barcode_arrangement = fields[barcode_arrangement_index];
+
+        if passes_filtering {
+            total_gigabases += sequence_length as f64 / 1_000_000_000.0;
+            lengths.push(sequence_length);
             pass_reads += 1;
 
-            let entry = most_prevalent_barcode.entry(barcode.to_string()).or_insert(0);
+            let entry = most_prevalent_barcode.entry(barcode_arrangement.to_string()).or_insert(0);
             *entry += 1;
             if *entry > pass_with_barcode {
                 pass_with_barcode = *entry;
-                total_gigabases_with_barcode += length as f64 / 1_000_000_000.0;
+                total_gigabases_with_barcode += sequence_length as f64 / 1_000_000_000.0;
             }
 
-            if length >= min_length_threshold && *entry == pass_with_barcode {
-                gigabases_with_barcode_and_length += length as f64 / 1_000_000_000.0;
+            if sequence_length >= min_length_threshold && *entry == pass_with_barcode {
+                gigabases_with_barcode_and_length += sequence_length as f64 / 1_000_000_000.0;
             }
         }
     }
