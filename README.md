@@ -73,6 +73,14 @@ Total gigabases of reads that pass with the detected barcode and are >= 15000bp:
 N50: 17.49 Kb
 ```
 
+### processing multiple summary files
+
+If you want to process a collection of summary text files something like below can be useful:
+
+```bash
+find ./target/dir -type f -name "sequencing_summary_*.txt" -print0 | xargs -0 -I{} sh -c 'echo "Processing {}"; ./target/release/sequencing_analysis {} 15000'
+```
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
