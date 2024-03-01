@@ -21,3 +21,5 @@ Thumbs.db
 
 # Ignore any temporary files
 *.tmp
+
+output.json
