@@ -32,13 +32,13 @@ To build this tool from source, follow these steps:
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/your_username/your_repository.git
+git clone https://github.com/sirselim/summary_metrics.git
 ```
 
 Navigate to the project directory:
 
 ```bash
-cd your_repository
+cd summary_metrics
 ```
 
 Build the project using Cargo:
