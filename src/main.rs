@@ -20,7 +20,7 @@ fn calculate_n50(lengths: &mut Vec<usize>) -> usize {
 fn print_help() {
     println!("Usage: <input_file> <minimum_length_threshold>");
     println!("<input_file>                  Nanopore sequencing summary text file");
-    println!("<minimum_length_threshold>    length to filter for statistics");
+    println!("<minimum_length_threshold>    Length to filter for statistics");
     println!("Options:");
     println!("  -h, --help                  Print this help message");
     println!("  -v, --version               Print version information");
@@ -55,8 +55,7 @@ fn main() {
 
     // Open the file
     let file = File::open(input_file).expect("Failed to open input file");
-    let cloned_file = file.try_clone().expect("Failed to clone File");
-    let reader = BufReader::new(cloned_file);
+    let reader = BufReader::new(file);
 
     let mut total_gigabases = 0.0;
     let mut total_gigabases_with_barcode = 0.0;
@@ -121,7 +120,7 @@ fn main() {
         println!("Number of reads that pass with the detected barcode: {}", pass_with_barcode);
         println!("Total gigabases of reads that pass: {:.2} Gb", total_gigabases);
         println!("Total gigabases of reads that pass with the detected barcode: {:.2} Gb", total_gigabases_with_barcode);
-        println!("Total gigabases of reads that pass with the detected barcode and are >= {}bp: {:.2} Gb", min_length_threshold, gigabases_with_barcode_and_length);
+        println!("Total gigabases of reads that pass with the detected barcode and are >= {} bp: {:.2} Gb", min_length_threshold, gigabases_with_barcode_and_length);
         println!("N50: {:.2} Kb", calculate_n50(&mut lengths) as f64 / 1000.0);
     }
 }
