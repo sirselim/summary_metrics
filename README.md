@@ -94,6 +94,12 @@ You can also use `gnu parallel` and provide a number of jobs/threads to process 
 find ../22_samples -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/sequencing_analysis {} 15000'
 ```
 
+## To Do
+
+- [X] remove hard coded columns, use header values
+- [X] add --json output option
+- [ ] work on error handling
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
