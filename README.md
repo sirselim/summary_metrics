@@ -84,7 +84,7 @@ find ./target/dir -type f -name "sequencing_summary_*.txt" -print0 | xargs -0 -I
 You can also use `gnu parallel` and provide a number of jobs/threads to process at once:
 
 ```bash
-find ../22_samples -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "Processing {}\n"; ./target/release/sequencing_analysis {} 15000'
+find ../22_samples -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/sequencing_analysis {} 15000'
 ```
 
 ## License
