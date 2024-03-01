@@ -81,6 +81,12 @@ If you want to process a collection of summary text files something like below c
 find ./target/dir -type f -name "sequencing_summary_*.txt" -print0 | xargs -0 -I{} sh -c 'echo "Processing {}"; ./target/release/sequencing_analysis {} 15000'
 ```
 
+You can also use `gnu parallel` and provide a number of jobs/threads to process at once:
+
+```bash
+find ../22_samples -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo "Processing {}\n"; ./target/release/sequencing_analysis {} 15000'
+```
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
