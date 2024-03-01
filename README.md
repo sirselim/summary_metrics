@@ -96,8 +96,8 @@ find ../22_samples -type f -name "sequencing_summary_*.txt" | parallel -j 24 'ec
 
 ## To Do
 
-- [X] remove hard coded columns, use header values
-- [X] add --json output option
+- [X] ~~remove hard coded columns, use header values~~
+- [X] ~~add --json output option~~
 - [ ] work on error handling
 
 ## License
