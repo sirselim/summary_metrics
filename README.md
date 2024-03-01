@@ -60,6 +60,19 @@ For example:
 
 This command will analyze the input.txt file with a read length of 15000 bp.
 
+You should see output similar to below:
+
+```bash
+$ ./target/release/sequencing_analysis test_summary.txt 15000
+Most prevalent barcode: barcode01 (Count: 10238841)
+Number of reads that pass: 10727726
+Number of reads that pass with most prevalent barcode: 10238841
+Total gigabases of reads that pass: 103.84
+Total gigabases of reads that pass with the detected barcode: 102.00
+Total gigabases of reads that pass with the detected barcode and are >= 15000bp: 59.32
+N50: 17.49 Kb
+```
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
