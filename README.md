@@ -14,7 +14,7 @@ This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequ
 
 ## Prerequisites
 
-Before using this tool, ensure you have the following installed on your system:
+You are welcome to download and try the pre-compiled binaries (info below). If you want to build from source, ensure you have the following installed on your system:
 
 - Rust compiler: [Installation instructions](https://www.rust-lang.org/tools/install)
 
