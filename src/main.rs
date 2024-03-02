@@ -4,7 +4,9 @@ use std::io::{BufRead, BufReader, Write};
 use std::collections::HashMap;
 
 fn calculate_n50(lengths: &mut Vec<usize>) -> usize {
-    lengths.sort_unstable_by(|a, b| b.cmp(a));
+    // Sort the lengths vector using radix sort
+    lengths.sort();
+
     let total_bases: usize = lengths.iter().sum();
     let half_total_bases = total_bases / 2;
     let mut cumulative_bases = 0;
@@ -20,7 +22,7 @@ fn calculate_n50(lengths: &mut Vec<usize>) -> usize {
 fn print_help() {
     println!("Usage: <input_file> <minimum_length_threshold>");
     println!("<input_file>                  Nanopore sequencing summary text file");
-    println!("<minimum_length_threshold>    Length to filter for statistics");
+    println!("<minimum_length_threshold>    length to filter for statistics");
     println!("Options:");
     println!("  -h, --help                  Print this help message");
     println!("  -v, --version               Print version information");
@@ -53,10 +55,19 @@ fn main() {
     let input_file = &args[1];
     let min_length_threshold: usize = args[2].parse().expect("Invalid minimum length threshold");
 
-    // Open the file
+    // Open the file and read the header
     let file = File::open(input_file).expect("Failed to open input file");
-    let reader = BufReader::new(file);
+    let cloned_file = file.try_clone().expect("Failed to clone file");
+    let reader = BufReader::new(cloned_file);
+    let header_line = reader.lines().next().expect("Failed to read header").unwrap();
+    let headers: Vec<&str> = header_line.split('\t').collect();
 
+    // Find column indices based on headers
+    let passes_filtering_index = headers.iter().position(|&x| x == "passes_filtering").unwrap();
+    let sequence_length_index = headers.iter().position(|&x| x == "sequence_length_template").unwrap();
+    let barcode_arrangement_index = headers.iter().position(|&x| x == "barcode_arrangement").unwrap();
+
+    // Process the rest of the file
     let mut total_gigabases = 0.0;
     let mut total_gigabases_with_barcode = 0.0;
     let mut pass_reads = 0;
@@ -70,13 +81,15 @@ fn main() {
         output_to_json = true;
     }
 
-    for line in reader.lines().skip(1) {
+    let cloned_reader = BufReader::new(file.try_clone().expect("Failed to clone reader"));
+
+    for line in cloned_reader.lines().skip(1) {
         let line = line.expect("Failed to read line");
         let fields: Vec<&str> = line.split('\t').collect();
 
-        let passes_filtering = fields[11] == "TRUE";
-        let sequence_length: usize = fields[15].parse().expect("Invalid sequence length");
-        let barcode_arrangement = fields[26];
+        let passes_filtering = fields[passes_filtering_index] == "TRUE";
+        let sequence_length: usize = fields[sequence_length_index].parse().expect("Invalid sequence length");
+        let barcode_arrangement = fields[barcode_arrangement_index];
 
         if passes_filtering {
             total_gigabases += sequence_length as f64 / 1_000_000_000.0;
