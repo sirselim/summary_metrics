@@ -128,7 +128,7 @@ fn main() {
         writeln!(json_output, "{}", json_data.to_string()).expect("Failed to write JSON data to file");
     } else {
         // Output to console
-        println!("Most prevalent barcode: {} (Count: {})", most_prevalent_barcode, most_prevalent_count);
+        // println!("Most prevalent barcode: {} (Count: {})", most_prevalent_barcode, most_prevalent_count);
         println!("Number of reads that pass: {}", pass_reads);
         println!("Number of reads that pass with the detected barcode: {}", pass_with_barcode);
         println!("Total gigabases of reads that pass: {:.2} Gb", total_gigabases);
