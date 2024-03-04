@@ -11,6 +11,7 @@ This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequ
   - pass/fail
   - barcode
   - given length
+- calculate basic read length statistics (mean, median)
 
 ## Prerequisites
 
@@ -25,7 +26,7 @@ You are welcome to download and try the pre-compiled binaries (info below). If y
 - [summary_metrics-0.1.1-linux-x64](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.1-linux-x64.tar.gz)
 - [summary_metrics-0.1.1-osx-arm](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.1-osx-arm64.tar.gz)
 
-### from source
+### From source
 
 To build this tool from source, follow these steps:
 
@@ -65,24 +66,28 @@ For example:
 ./target/release/rust_tool input.txt 15000
 ```
 
-This command will analyze the input.txt file with a read length of 15000 bp.
+This command will analyze the `input.txt`` file using a read length of 15000 bp.
 
 You should see output similar to below:
 
 ```bash
-> ./target/release/summary_metrics ../summary_simulator/test_data.txt 15000
-N50 (total): 14.53 Kb
+> ./target/release/summary_metrics ../summary_simulator/sequencing_summary_sim_data.txt 15000
 Total reads: 1000000
-Detected barcode (total): barcode01 (count: 851049)
-Total passed reads: 889187
-Detected barcode (passed): barcode01 (count: 756652)
-Total output: 10.01 gigabases
-Total output (passed): 8.90 gigabases
-Total output (passed, barcode): 7.57 gigabases
-Total >= 15000 bases (passed, barcode): 3.64 gigabases
+Detected barcode (total): barcode02 (count: 850103)
+Total passed reads: 888805
+Detected barcode (passed): barcode02 (count: 755502)
+Total output: 9.99 gigabases
+Total output (passed): 8.88 gigabases
+Total output (passed, barcode): 7.55 gigabases
+Total >= 15000 bases (passed, barcode): 3.94 gigabases
+N50 (total): 15.65 Kb
+Mean read length (before filtering): 9993.77 bases
+Median read length (before filtering): 7390.00 bases
+Mean read length (after filtering): 9990.51 bases
+Median read length (after filtering): 7387.00 bases
 ```
 
-### processing multiple summary files
+### Processing multiple summary files
 
 If you want to process a collection of summary text files something like below can be useful:
 
