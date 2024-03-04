@@ -26,3 +26,4 @@ output.json
 *_output.md
 notes.md
 *.py
+*.old
