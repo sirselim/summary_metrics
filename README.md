@@ -112,7 +112,7 @@ find ../22_samples -type f -name "sequencing_summary_*.txt" | parallel -j 24 'ec
 - [X] ~~add proper help options~~
 - [X] ~~basic read statistics~~
 - [ ] add --json output option
-- [ ] explore further customizable output formats
+  - [ ] explore further customizable output formats
 - [ ] additional filtering options
 - [ ] explore visualisation options
 - [ ] work on error handling
