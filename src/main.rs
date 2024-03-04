@@ -160,13 +160,13 @@ fn main() -> io::Result<()> {
     println!();
 
     if let Some((max_barcode, max_count)) = total_barcode_counts.iter().max_by_key(|&(_, count)| count) {
-        println!("Detected barcode (total): {} (count: {})", max_barcode.green(), max_count);
+        println!("Detected barcode (total): {} (count: {})", max_barcode.green().bold(), max_count);
     } else {
         println!("No barcode data found in the file.");
     }
 
     if let Some((max_barcode, max_count)) = passing_barcode_counts.iter().max_by_key(|&(_, count)| count) {
-        println!("Detected barcode (passed): {} (count: {})", max_barcode.green(), max_count);
+        println!("Detected barcode (passed): {} (count: {})", max_barcode.green().bold(), max_count);
     } else {
         println!("No barcode data found in the passed reads.");
     }
@@ -177,14 +177,14 @@ fn main() -> io::Result<()> {
     let total_sequence_data_most_common_barcode_gb = total_sequence_data_most_common_barcode as f64 / 1_000_000_000.0;
     let long_sequences_most_common_barcode_gb = long_sequences_most_common_barcode as f64 / 1_000_000_000.0;
 
-    println!("Total output: {:.2} Gb", total_sequence_data_all_gb);
+    println!("{}", format!("Total output: {:.2} Gb", total_sequence_data_all_gb).bold());
     println!("Total output (passed): {:.2} Gb", total_sequence_data_passed_gb);
     println!("Total output (passed, barcode): {:.2} Gb", total_sequence_data_most_common_barcode_gb);
     println!("Total >= {} bp (passed, barcode): {:.2} Gb", min_length, long_sequences_most_common_barcode_gb);
 
     if let Some(n50) = calculate_n50(&sequence_lengths_all) {
         let n50_kb = n50 as f64 / 1000.0;
-        println!("{}", format!("N50 (total): {:.2} Kb", n50_kb).blue());
+        println!("{}", format!("N50 (total): {:.2} Kb", n50_kb).yellow().bold());
     } else {
         println!("No sequence length data found.");
     }
