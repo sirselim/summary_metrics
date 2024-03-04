@@ -72,19 +72,24 @@ You should see output similar to below:
 
 ```bash
 > ./target/release/summary_metrics ../summary_simulator/sequencing_summary_sim_data.txt 15000
+----------------------- Summary Metrics -----------------------
 Total reads: 1000000
-Detected barcode (total): barcode02 (count: 850103)
 Total passed reads: 888805
+
+Detected barcode (total): barcode02 (count: 850103)
 Detected barcode (passed): barcode02 (count: 755502)
-Total output: 9.99 gigabases
-Total output (passed): 8.88 gigabases
-Total output (passed, barcode): 7.55 gigabases
-Total >= 15000 bases (passed, barcode): 3.94 gigabases
+
+Total output: 9.99 Gb
+Total output (passed): 8.88 Gb
+Total output (passed, barcode): 7.55 Gb
+Total >= 15000 bp (passed, barcode): 3.94 Gb
 N50 (total): 15.65 Kb
-Mean read length (before filtering): 9993.77 bases
-Median read length (before filtering): 7390.00 bases
-Mean read length (after filtering): 9990.51 bases
-Median read length (after filtering): 7387.00 bases
+
+Mean read length (before filtering): 9993.77 bp
+Median read length (before filtering): 7390.00 bp
+Mean read length (after filtering): 9990.51 bp
+Median read length (after filtering): 7387.00 bp
+---------------------------- Done -----------------------------
 ```
 
 ### Processing multiple summary files
