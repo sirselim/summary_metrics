@@ -153,6 +153,7 @@ fn main() -> io::Result<()> {
         }
     }
 
+    println!();
     println!("----------------------- Summary Metrics -----------------------");
     println!("Total reads: {}", total_line_count);
     println!("Total passed reads: {}", passing_barcode_counts.values().sum::<u32>());
