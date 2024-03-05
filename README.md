@@ -72,6 +72,7 @@ You should see output similar to below:
 
 ```bash
 > ./target/release/summary_metrics ../summary_simulator/sequencing_summary_sim_data.txt 15000
+
 ----------------------- Summary Metrics -----------------------
 Total reads: 1000000
 Total passed reads: 888805
