@@ -23,6 +23,7 @@ Thumbs.db
 *.tmp
 
 output.json
+output.csv
 *_output.md
 notes.md
 *.py
