@@ -1,6 +1,6 @@
 # summary_metrics
 
-This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequencing summary text files and calculate various statistics 
+This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequencing summary text files and calculate various statistics.
 
 ## Features
 
