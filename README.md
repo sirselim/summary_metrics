@@ -4,6 +4,11 @@ This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequ
 
 ## Features
 
+- Extracts run information
+  - flowcell ID
+  - run ID
+  - sample ID
+  - experiment ID
 - Calculate total output (Gb) of reads
 - Determine the N50 value
 - Identify the most prevalent barcode
@@ -74,6 +79,11 @@ You should see output similar to below:
 > ./target/release/summary_metrics ../summary_simulator/sequencing_summary_sim_data.txt 15000
 
 ----------------------- Summary Metrics -----------------------
+Flowcell ID: PAU02321
+Run ID: f28b19103a1ace40d6afbd35638193fb1a25b699
+Experiment ID: 2024_Mar03_test
+Sample ID: dummy_data
+
 Total reads: 1000000
 Total passed reads: 888805
 
@@ -112,6 +122,7 @@ find ../22_samples -type f -name "sequencing_summary_*.txt" | parallel -j 24 'ec
 - [X] ~~remove hard coded columns, use header values~~
 - [X] ~~add proper help options~~
 - [X] ~~basic read statistics~~
+- [X] ~~extract info for flowcell, sample, experiment etc.~~
 - [ ] refactor the mess!
 - [ ] add --json output option
   - [ ] explore further customizable output formats

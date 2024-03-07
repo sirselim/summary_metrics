@@ -4,6 +4,42 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use colored::*;
 
+// function to locate and extract flowcell id from filename
+fn extract_ids(filename: &str, column_names: Vec<&str>) -> Option<Vec<Option<String>>> {
+    let file = File::open(filename).ok()?;
+    let mut reader = io::BufReader::new(file);
+
+    // Read the header line to find the column indices
+    let mut header_line = String::new();
+    reader.read_line(&mut header_line).ok()?;
+
+    let columns: Vec<&str> = header_line.trim().split('\t').collect();
+
+    // Find the indices of the desired columns
+    let mut column_indices = Vec::new();
+    for &column_name in &column_names {
+        if let Some(column_index) = columns.iter().position(|&x| x == column_name) {
+            column_indices.push(column_index);
+        } else {
+            return None; // Column name not found
+        }
+    }
+
+    // Process the first line of data using the found column indices
+    let mut first_data_line = String::new();
+    reader.read_line(&mut first_data_line).ok()?;
+
+    let columns_in_first_line: Vec<&str> = first_data_line.trim().split('\t').collect();
+
+    let mut extracted_ids = Vec::new();
+    for &column_index in &column_indices {
+        let column_data = columns_in_first_line.get(column_index).map(|&x| x.to_string());
+        extracted_ids.push(column_data);
+    }
+
+    Some(extracted_ids)
+}
+
 // function to calculate N50
 fn calculate_n50(sequence_lengths: &[u64]) -> Option<u64> {
     let mut sorted_lengths = sequence_lengths.to_vec();
@@ -95,6 +131,7 @@ fn main() -> io::Result<()> {
     let mut long_sequences_most_common_barcode: u64 = 0;
     let mut sequence_lengths_all: Vec<u64> = Vec::new();
     let mut sequence_lengths_passed: Vec<u64> = Vec::new();
+    let column_names = vec!["filename_pod5", "run_id", "experiment_id", "sample_id"];
 
     for (index, line) in reader.lines().enumerate() {
         let line = line?;
@@ -155,6 +192,38 @@ fn main() -> io::Result<()> {
 
     println!();
     println!("----------------------- Summary Metrics -----------------------");
+    if let Some(ids) = extract_ids(filename, column_names) {
+        if let Some(flowcell_id) = &ids[0] {
+            if let Some(separator_index) = flowcell_id.find('_') {
+                println!("Flowcell ID: {}", &flowcell_id[..separator_index].cyan().bold());
+            } else {
+                println!("Flowcell ID: {}", flowcell_id.cyan().bold());
+            }
+        } else {
+            eprintln!("Warning: Flowcell ID not found");
+        }
+        // Print other IDs without processing them
+        if let Some(run_id) = &ids[1] {
+            println!("Run ID: {}", run_id);
+        } else {
+            eprintln!("Warning: Run ID not found");
+        }
+
+        if let Some(experiment_id) = &ids[2] {
+            println!("Experiment ID: {}", experiment_id);
+        } else {
+            eprintln!("Warning: Experiment ID not found");
+        }
+
+        if let Some(sample_id) = &ids[3] {
+            println!("Sample ID: {}", sample_id);
+        } else {
+            eprintln!("Warning: Sample ID not found");
+        }
+    } else {
+        eprintln!("Warning: Separator not found in the first data line");
+    }
+    println!();
     println!("Total reads: {}", total_line_count);
     println!("Total passed reads: {}", passing_barcode_counts.values().sum::<u32>());
     println!();

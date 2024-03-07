@@ -22,8 +22,10 @@ Thumbs.db
 # Ignore any temporary files
 *.tmp
 
+# ignore testing files/data
 output.json
+output.csv
 *_output.md
+output*
 notes.md
-*.py
 *.old
