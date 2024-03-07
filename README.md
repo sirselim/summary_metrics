@@ -122,11 +122,23 @@ find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 
 We can take the approach above and pass the output to the python script `table_generator.py`. This has an argument, `--format`, which takes `md`, `csv` 
 and `json` as options, depending on the format selected.
 
+##### Narkdown
+
 ```bash
 # output to markdown
 find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format md > my_output.md
+```
+
+##### CSV
+
+```bash
 # output to csv
 find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format csv > my_output.csv
+```
+
+##### json
+
+```bash
 # output to json
 find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format json > my_output.json
 ```
