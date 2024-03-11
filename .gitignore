@@ -25,6 +25,7 @@ Thumbs.db
 # ignore testing files/data
 output.json
 output.csv
+*.csv
 *_output.md
 output*
 notes.md
