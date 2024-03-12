@@ -117,6 +117,33 @@ You can also use `gnu parallel` and provide a number of jobs/threads to process 
 find ../22_samples -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000 --qscore 9.0'
 ```
 
+#### Outputting to table
+
+We can take the approach above and pass the output to the python script `table_generator.py`. This has an argument, `--format`, which takes `md`, `csv` 
+and `json` as options. Depending on the format selected the output will be converted to a table and passed to `stdout`, if you want it in a file you
+can redirect the output (i.e. `> my_output.csv`). See below for specific examples.
+
+##### Markdown
+
+```bash
+# output to markdown
+find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format md > my_output.md
+```
+
+##### CSV
+
+```bash
+# output to csv
+find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format csv > my_output.csv
+```
+
+##### json
+
+```bash
+# output to json
+find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format json > my_output.json
+```
+
 ## To Do
 
 - [X] ~~remove hard coded columns, use header values~~
