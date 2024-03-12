@@ -4,7 +4,7 @@ This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequ
 
 ## Features
 
-- Extracts run information
+- Extracts run information (if present)
   - flowcell ID
   - run ID
   - sample ID
@@ -13,9 +13,9 @@ This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequ
 - Determine the N50 value
 - Identify the most prevalent barcode
 - Count reads that pass filtering criteria, including
-  - pass/fail
-  - barcode
-  - given length
+  - pass/fail (can be user provided q-score, default is 9.0)
+  - barcode (detected if present)
+  - given length (provide statistics for reads meeting this criteria)
 - calculate basic read length statistics (mean, median)
 
 ## Prerequisites
@@ -28,8 +28,13 @@ You are welcome to download and try the pre-compiled binaries (info below). If y
 
 ### pre-compiled binaries
 
+<<<<<<< HEAD
 - [summary_metrics-0.1.3-linux-x64](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.3-linux-x64.tar.gz)
 - [summary_metrics-0.1.3-osx-arm](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.3-osx-arm64.tar.gz)
+=======
+- [summary_metrics-0.1.4-linux-x64](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.4-linux-x64.tar.gz)
+- [summary_metrics-0.1.4-osx-arm](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.4-osx-arm64.tar.gz)
+>>>>>>> multi_processing
 
 ### From source
 
@@ -60,23 +65,23 @@ This will compile the Rust code and generate the executable binary in the target
 Once the binary is built, you can run the tool with the following command:
 
 ```bash
-./target/release/rust_tool <input_file> <read_length>
+./target/release/rust_tool <input_file>
 ```
 
-Replace <input_file> with the path to your input file and <read_length> with the desired read length parameter.
+Replace <input_file> with the path to your input file. This will run the tool with a default `--length` of `15000`bp and deafult `--qscore` of `9.0`. If you want to change these options you can.
 
 For example:
 
 ```bash
-./target/release/rust_tool input.txt 15000
+./target/release/rust_tool input.txt --length 20000 --qscore 10.0
 ```
 
-This command will analyze the `input.txt`` file using a read length of 15000 bp.
+This command will analyze the `input.txt` file using a read length of `20000` bp and qscore threshold of `10.0`.
 
 You should see output similar to below:
 
 ```bash
-> ./target/release/summary_metrics ../summary_simulator/sequencing_summary_sim_data.txt 15000
+> ./target/release/summary_metrics ../summary_simulator/sequencing_summary_sim_data.txt --length 20000 --qscore 10.0
 
 ----------------------- Summary Metrics -----------------------
 Flowcell ID: PAU02321
@@ -93,7 +98,7 @@ Detected barcode (passed): barcode02 (count: 755502)
 Total output: 9.99 Gb
 Total output (passed): 8.88 Gb
 Total output (passed, barcode): 7.55 Gb
-Total >= 15000 bp (passed, barcode): 3.94 Gb
+Total >= 20000 bp (passed, barcode): 3.94 Gb
 N50 (total): 15.65 Kb
 
 Mean read length (before filtering): 9993.77 bp
@@ -108,13 +113,13 @@ Median read length (after filtering): 7387.00 bp
 If you want to process a collection of summary text files something like below can be useful:
 
 ```bash
-find ./target/dir -type f -name "sequencing_summary_*.txt" -print0 | xargs -0 -I{} sh -c 'echo "Processing {}"; ./target/release/summary_metrics {} 15000'
+find ./target/dir -type f -name "sequencing_summary_*.txt" -print0 | xargs -0 -I{} sh -c 'echo "Processing {}"; ./target/release/summary_metrics {} --length 15000 --qscore 9.0'
 ```
 
 You can also use `gnu parallel` and provide a number of jobs/threads to process at once:
 
 ```bash
-find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000'
+find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000 --qscore 9.0'
 ```
 
 #### Outputting to table
@@ -127,21 +132,21 @@ can redirect the output (i.e. `> my_output.csv`). See below for specific example
 
 ```bash
 # output to markdown
-find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format md > my_output.md
+find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format md > my_output.md
 ```
 
 ##### CSV
 
 ```bash
 # output to csv
-find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format csv > my_output.csv
+find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format csv > my_output.csv
 ```
 
 ##### json
 
 ```bash
 # output to json
-find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format json > my_output.json
+find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format json > my_output.json
 ```
 
 ## To Do
@@ -150,12 +155,12 @@ find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 
 - [X] ~~add proper help options~~
 - [X] ~~basic read statistics~~
 - [X] ~~extract info for flowcell, sample, experiment etc.~~
+- [X] ~~additional filtering options (user defined qscore)~~
+- [X] ~~work on error handling~~
 - [ ] refactor the mess!
 - [ ] add --json output option
   - [ ] explore further customizable output formats
-- [ ] additional filtering options
 - [ ] explore visualisation options
-- [ ] work on error handling
 - [ ] further performance optimisations
 
 ## License
