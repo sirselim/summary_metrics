@@ -127,21 +127,21 @@ can redirect the output (i.e. `> my_output.csv`). See below for specific example
 
 ```bash
 # output to markdown
-find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format md > my_output.md
+find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format md > my_output.md
 ```
 
 ##### CSV
 
 ```bash
 # output to csv
-find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format csv > my_output.csv
+find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format csv > my_output.csv
 ```
 
 ##### json
 
 ```bash
 # output to json
-find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} 15000' | python3 ./table_generator.py --format json > my_output.json
+find ./experiment_dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format json > my_output.json
 ```
 
 ## To Do
