@@ -119,7 +119,7 @@ find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'ech
 
 #### Outputting to table
 
-We can take the approach above and pass the output to the python script `table_generator.py`. This has an argument, `--format`, which takes `md`, `csv` 
+We can take the approach above and pass the output to the python script `table_generator.py`. This has an argument, `--format`, which takes `md`, `csv`
 and `json` as options. Depending on the format selected the output will be converted to a table and passed to `stdout`, if you want it in a file you
 can redirect the output (i.e. `> my_output.csv`). See below for specific examples.
 
