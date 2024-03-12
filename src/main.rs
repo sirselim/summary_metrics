@@ -3,6 +3,7 @@ use std::env;
 use std::fs::File;
 use std::io::{self, BufRead};
 use colored::*;
+use clap::{App, Arg};
 
 // function to locate and extract flowcell id from different locations
 fn extract_ids(filename: &str, column_names: Vec<&str>) -> Option<Vec<Option<String>>> {
@@ -96,42 +97,44 @@ fn calculate_median(read_lengths: &mut [u64]) -> f64 {
     }
 }
 
-// help
-fn print_help() {
-    println!("Usage: <input_file> <minimum_length_threshold>");
-    println!("  <input_file>                  Nanopore sequencing summary text file");
-    println!("  <minimum_length_threshold>    Length to filter for statistics");
-    println!("Options:");
-    println!("  -h, --help                    Print this help message");
-    println!("  -v, --version                 Print version information");
-}
-
-// version info
-fn print_version() {
-    println!("summary_metrics version {}", env!("CARGO_PKG_VERSION"));
-}
-
+// main
 fn main() -> io::Result<()> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 3 {
-        match args.len() {
-            2 if args[1] == "-h" || args[1] == "--help" => {
-                print_help();
-            }
-            2 if args[1] == "-v" || args[1] == "--version" => {
-                print_version();
-            }
-            _ => {
-                eprintln!("Invalid number of arguments. Use -h or --help for usage information.");
-                std::process::exit(1);
-            }
-        }
-        return Ok(());
-    }
+    let matches = App::new("summary_metrics")
+        .version(env!("CARGO_PKG_VERSION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .arg(
+            Arg::with_name("input_file")
+                .help("Nanopore sequencing summary text file")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("length")
+                .short('l')
+                .long("length")
+                .takes_value(true)
+                .help("Minimum length threshold in basepairs (default: 15000)"),
+        )
+        .arg(
+            Arg::with_name("qscore")
+                .short('q')
+                .long("qscore")
+                .takes_value(true)
+                .help("Quality score threshold (default: 9.0)"),
+        )
+        .get_matches();
 
-    let filename = &args[1];
-    let min_length: u64 = args[2].parse().unwrap_or_else(|_| {
+    let filename = matches.value_of("input_file").unwrap();
+
+    // Parse other optional arguments if provided
+    let min_length = matches.value_of("length").unwrap_or("15000").parse().unwrap_or_else(|_| {
         eprintln!("Minimum length must be a positive integer.");
+        std::process::exit(1);
+    });
+
+    let qscore: f64 = matches.value_of("qscore").unwrap_or("9.0").parse().unwrap_or_else(|_| {
+        eprintln!("Qscore must be a valid floating-point number.");
         std::process::exit(1);
     });
 
@@ -140,7 +143,7 @@ fn main() -> io::Result<()> {
 
     let mut total_line_count = 0;
     let mut passing_read_counts = 0;
-    let mut passes_filtering_index = None;
+    let mut mean_qscore_index = None;
     let mut barcode_index = None;
     let mut sequence_length_index = None;
     let mut total_barcode_counts: HashMap<String, u32> = HashMap::new();
@@ -158,11 +161,11 @@ fn main() -> io::Result<()> {
         let fields: Vec<&str> = line.split('\t').collect();
     
         if index == 0 {
-            passes_filtering_index = fields.iter().position(|&x| x == "passes_filtering");
+            mean_qscore_index = fields.iter().position(|&x| x == "mean_qscore_template");
             sequence_length_index = fields.iter().position(|&x| x == "sequence_length_template");
     
-            if passes_filtering_index.is_none() || sequence_length_index.is_none() {
-                eprintln!("One or more columns not found in the header.");
+            if mean_qscore_index.is_none() || sequence_length_index.is_none() {
+                eprintln!("Required information not found in the sequencing summary file header. File must contain columns: sequence_length_template, mean_qscore_template");
                 std::process::exit(1);
             }
     
@@ -188,9 +191,9 @@ fn main() -> io::Result<()> {
                     total_sequence_data_all += seq_len;
                     sequence_lengths_all.push(seq_len);
     
-                    if let Some(passes_filtering_idx) = passes_filtering_index {
-                        if let Some(passes_filtering) = fields.get(passes_filtering_idx) {
-                            if *passes_filtering == "TRUE" {
+                    if let Some(mean_qscore_idx) = mean_qscore_index {
+                        if let Some(passes_filtering) = fields.get(mean_qscore_idx) {
+                            if passes_filtering.parse::<f64>().unwrap() >= qscore {
                                 passing_read_counts += 1;
                                 total_sequence_data_passed += seq_len;
                                 sequence_lengths_passed.push(seq_len);
@@ -216,89 +219,89 @@ fn main() -> io::Result<()> {
     }
 
     println!();
-println!("----------------------- Summary Metrics -----------------------");
-if let Some(ids) = extract_ids(filename, column_names) {
-    if let Some(flowcell_id) = &ids[0] {
-        if let Some(separator_index) = flowcell_id.find('_') {
-            println!("Flowcell ID: {}", &flowcell_id[..separator_index].cyan().bold());
+    println!("----------------------- Summary Metrics -----------------------");
+    if let Some(ids) = extract_ids(filename, column_names) {
+        if let Some(flowcell_id) = &ids[0] {
+            if let Some(separator_index) = flowcell_id.find('_') {
+                println!("Flowcell ID: {}", &flowcell_id[..separator_index].cyan().bold());
+            } else {
+                println!("Flowcell ID: {}", flowcell_id.cyan().bold());
+            }
         } else {
-            println!("Flowcell ID: {}", flowcell_id.cyan().bold());
+            eprintln!("Warning: Flowcell ID not found");
+        }
+        // Print other IDs without processing them
+        if let Some(run_id) = &ids[1] {
+            println!("Run ID: {}", run_id);
+        } else {
+            eprintln!("Warning: Run ID not found");
+        }
+
+        if let Some(experiment_id) = &ids[2] {
+            println!("Experiment ID: {}", experiment_id);
+        } else {
+            eprintln!("Warning: Experiment ID not found");
+        }
+
+        if let Some(sample_id) = &ids[3] {
+            println!("Sample ID: {}", sample_id);
+        } else {
+            eprintln!("Warning: Sample ID not found");
         }
     } else {
-        eprintln!("Warning: Flowcell ID not found");
-    }
-    // Print other IDs without processing them
-    if let Some(run_id) = &ids[1] {
-        println!("Run ID: {}", run_id);
-    } else {
-        eprintln!("Warning: Run ID not found");
-    }
-
-    if let Some(experiment_id) = &ids[2] {
-        println!("Experiment ID: {}", experiment_id);
-    } else {
-        eprintln!("Warning: Experiment ID not found");
-    }
-
-    if let Some(sample_id) = &ids[3] {
-        println!("Sample ID: {}", sample_id);
-    } else {
-        eprintln!("Warning: Sample ID not found");
-    }
-} else {
-    eprintln!("Warning: No identifying information located in sequencing summary file.");
-}
-println!();
-println!("Total reads: {}", total_line_count);
-println!("Total passed reads: {}", passing_read_counts);
-println!();
-
-// Print barcode information only if barcode_arrangement column is present
-if barcode_index.is_some() {
-    if let Some((max_barcode, max_count)) = total_barcode_counts.iter().max_by_key(|&(_, count)| count) {
-        println!("Detected barcode (total): {} (count: {})", max_barcode.green().bold(), max_count);
-    } else {
-        println!("No barcode data found in the file.");
-    }
-
-    if let Some((max_barcode, max_count)) = passing_barcode_counts.iter().max_by_key(|&(_, count)| count) {
-        println!("Detected barcode (passed): {} (count: {})", max_barcode.green().bold(), max_count);
-    } else {
-        println!("No barcode data found in the passed reads.");
+        eprintln!("Warning: No identifying information located in sequencing summary file.");
     }
     println!();
-}
+    println!("Total reads: {}", total_line_count);
+    println!("Total passed reads: {}", passing_read_counts);
+    println!();
 
-let total_sequence_data_all_gb = total_sequence_data_all as f64 / 1_000_000_000.0;
-let total_sequence_data_passed_gb = total_sequence_data_passed as f64 / 1_000_000_000.0;
-let total_sequence_data_most_common_barcode_gb = total_sequence_data_most_common_barcode as f64 / 1_000_000_000.0;
-let long_sequences_most_common_barcode_gb = long_sequences_most_common_barcode as f64 / 1_000_000_000.0;
+    // Print barcode information only if barcode_arrangement column is present
+    if barcode_index.is_some() {
+        if let Some((max_barcode, max_count)) = total_barcode_counts.iter().max_by_key(|&(_, count)| count) {
+            println!("Detected barcode (total): {} (count: {})", max_barcode.green().bold(), max_count);
+        } else {
+            println!("No barcode data found in the file.");
+        }
 
-println!("{}", format!("Total output: {:.2} Gb", total_sequence_data_all_gb).bold());
-println!("Total output (passed): {:.2} Gb", total_sequence_data_passed_gb);
+        if let Some((max_barcode, max_count)) = passing_barcode_counts.iter().max_by_key(|&(_, count)| count) {
+            println!("Detected barcode (passed): {} (count: {})", max_barcode.green().bold(), max_count);
+        } else {
+            println!("No barcode data found in the passed reads.");
+        }
+        println!();
+    }
 
-if barcode_index.is_some() {
-    println!("Total output (passed, barcode): {:.2} Gb", total_sequence_data_most_common_barcode_gb);
-    println!("Total >= {} bp (passed, barcode): {:.2} Gb", min_length, long_sequences_most_common_barcode_gb);
-}
-if let Some(n50) = calculate_n50(&sequence_lengths_all) {
-    let n50_kb = n50 as f64 / 1000.0;
-    println!("{}", format!("N50 (total): {:.2} Kb", n50_kb).yellow().bold());
-} else {
-    println!("No sequence length data found.");
-}
-println!();
+    let total_sequence_data_all_gb = total_sequence_data_all as f64 / 1_000_000_000.0;
+    let total_sequence_data_passed_gb = total_sequence_data_passed as f64 / 1_000_000_000.0;
+    let total_sequence_data_most_common_barcode_gb = total_sequence_data_most_common_barcode as f64 / 1_000_000_000.0;
+    let long_sequences_most_common_barcode_gb = long_sequences_most_common_barcode as f64 / 1_000_000_000.0;
 
-let mean_read_length_all = calculate_mean(&sequence_lengths_all);
-let median_read_length_all = calculate_median(&mut sequence_lengths_all);
-let mean_read_length_passed = calculate_mean(&sequence_lengths_passed);
-let median_read_length_passed = calculate_median(&mut sequence_lengths_passed);
+    println!("{}", format!("Total output: {:.2} Gb", total_sequence_data_all_gb).bold());
+    println!("Total output (passed): {:.2} Gb", total_sequence_data_passed_gb);
 
-println!("Mean read length (before filtering): {:.2} bp", mean_read_length_all);
-println!("Median read length (before filtering): {:.2} bp", median_read_length_all);
-println!("Mean read length (after filtering): {:.2} bp", mean_read_length_passed);
-println!("Median read length (after filtering): {:.2} bp", median_read_length_passed);
-println!("---------------------------- Done -----------------------------");
+    if barcode_index.is_some() {
+        println!("Total output (passed, barcode): {:.2} Gb", total_sequence_data_most_common_barcode_gb);
+        println!("Total >= {} bp (passed, barcode): {:.2} Gb", min_length, long_sequences_most_common_barcode_gb);
+    }
+    if let Some(n50) = calculate_n50(&sequence_lengths_all) {
+        let n50_kb = n50 as f64 / 1000.0;
+        println!("{}", format!("N50 (total): {:.2} Kb", n50_kb).yellow().bold());
+    } else {
+        println!("No sequence length data found.");
+    }
+    println!();
 
-Ok(())
+    let mean_read_length_all = calculate_mean(&sequence_lengths_all);
+    let median_read_length_all = calculate_median(&mut sequence_lengths_all);
+    let mean_read_length_passed = calculate_mean(&sequence_lengths_passed);
+    let median_read_length_passed = calculate_median(&mut sequence_lengths_passed);
+
+    println!("Mean read length (before filtering): {:.2} bp", mean_read_length_all);
+    println!("Median read length (before filtering): {:.2} bp", median_read_length_all);
+    println!("Mean read length (after filtering): {:.2} bp", mean_read_length_passed);
+    println!("Median read length (after filtering): {:.2} bp", median_read_length_passed);
+    println!("---------------------------- Done -----------------------------");
+
+    Ok(())
 }

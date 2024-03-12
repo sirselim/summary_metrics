@@ -4,7 +4,7 @@ This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequ
 
 ## Features
 
-- Extracts run information
+- Extracts run information (if present)
   - flowcell ID
   - run ID
   - sample ID
@@ -13,9 +13,9 @@ This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequ
 - Determine the N50 value
 - Identify the most prevalent barcode
 - Count reads that pass filtering criteria, including
-  - pass/fail
-  - barcode
-  - given length
+  - pass/fail (can be user provided q-score, default is 9.0)
+  - barcode (detected if present)
+  - given length (provide statistics for reads meeting this criteria)
 - calculate basic read length statistics (mean, median)
 
 ## Prerequisites
@@ -28,8 +28,8 @@ You are welcome to download and try the pre-compiled binaries (info below). If y
 
 ### pre-compiled binaries
 
-- [summary_metrics-0.1.2-linux-x64](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.2-linux-x64.tar.gz)
-- [summary_metrics-0.1.2-osx-arm](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.2-osx-arm64.tar.gz)
+- [summary_metrics-0.1.4-linux-x64](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.4-linux-x64.tar.gz)
+- [summary_metrics-0.1.4-osx-arm](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.4-osx-arm64.tar.gz)
 
 ### From source
 
