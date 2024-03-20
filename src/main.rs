@@ -154,28 +154,30 @@ fn main() -> io::Result<()> {
             Arg::with_name("input_file")
                 .help("Nanopore sequencing summary text file")
                 .required(true)
-                .index(1),
+                .index(1)
         )
         .arg(
             Arg::with_name("length")
                 .short('l')
                 .long("length")
                 .takes_value(true)
-                .help("Minimum length threshold in basepairs (default: 15000)"),
+                .help("Minimum length threshold in basepairs")
+                .default_value("15000")
         )
         .arg(
             Arg::with_name("qscore")
                 .short('q')
                 .long("qscore")
                 .takes_value(true)
-                .help("Quality score threshold (default: 9.0)"),
+                .help("Quality score threshold")
+                .default_value("9.0")
         )
         .arg(
             Arg::with_name("function")
-                .help("Function to execute")
+                .help("Auxillary functions to execute.\n `detect_barcodes` will identify and output barcode count and total amount of sequence of each.")
                 .required(false)
                 .index(2)
-                .possible_values(&["detect_barcodes"]) // Add "detect_barcode" as a possible function value
+                .possible_values(&["detect_barcodes"])
         )
         .get_matches();
 
