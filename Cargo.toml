@@ -11,3 +11,4 @@ opt-level = 3
 [dependencies]
 colored = "2.0"
 clap = "3.0"
+num-format = "^0.4.0"

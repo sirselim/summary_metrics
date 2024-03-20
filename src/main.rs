@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use colored::*;
 use clap::{App, Arg};
+use num_format::{Locale, ToFormattedString};
 
 // function to locate and extract flowcell id from different locations
 fn extract_ids(filename: &str, column_names: Vec<&str>) -> Option<Vec<Option<String>>> {
@@ -97,6 +98,52 @@ fn calculate_median(read_lengths: &mut [u64]) -> f64 {
     }
 }
 
+// Function to detect barcodes and report the sum of read lengths
+fn detect_barcodes(filename: &str, barcode_index: Option<usize>, sequence_length_index: Option<usize>) -> io::Result<()> {
+    let file = File::open(filename)?;
+    let reader = io::BufReader::new(file);
+
+    let mut barcode_counts: HashMap<String, (u32, u64)> = HashMap::new();
+
+    for line in reader.lines().skip(1) {
+        let line = line?;
+        let fields: Vec<&str> = line.split('\t').collect();
+
+        if let Some(barcode_idx) = barcode_index {
+            if let Some(barcode_arrangement) = fields.get(barcode_idx) {
+                // Convert sequence length to u64
+                let read_length: u64 = if let Some(seq_len_idx) = sequence_length_index {
+                    if let Some(seq_len_str) = fields.get(seq_len_idx) {
+                        seq_len_str.parse().unwrap_or(0)
+                    } else {
+                        0
+                    }
+                } else {
+                    0
+                };
+
+                let (reads, bases) = barcode_counts.entry(barcode_arrangement.to_string()).or_insert((0, 0));
+                *reads += 1;
+                *bases += read_length;
+            }
+        }
+    }
+
+    // Sort barcodes by name
+    let mut sorted_barcodes: Vec<_> = barcode_counts.into_iter().collect();
+    sorted_barcodes.sort_by(|(barcode1, _), (barcode2, _)| barcode1.cmp(barcode2));
+
+    // Print the results in a table format
+    println!("------------ Barcode Detection ------------");
+    println!("{}", format!("{:<12} {:<13} {:<16}", "Barcode", "Reads", "Bases").yellow().bold());
+    println!("{:<12} {:<13} {:<16}", "------------", "-------------", "----------------");
+    for (barcode, (reads, bases)) in sorted_barcodes {
+        println!("{:<12} {:>13} {:>16}", barcode, reads.to_formatted_string(&Locale::en), bases.to_formatted_string(&Locale::en));
+    }
+    println!("------------------- Done ------------------");
+    Ok(())
+}
+
 // main
 fn main() -> io::Result<()> {
     let matches = App::new("summary_metrics")
@@ -122,6 +169,13 @@ fn main() -> io::Result<()> {
                 .long("qscore")
                 .takes_value(true)
                 .help("Quality score threshold (default: 9.0)"),
+        )
+        .arg(
+            Arg::with_name("function")
+                .help("Function to execute")
+                .required(false)
+                .index(2)
+                .possible_values(&["detect_barcodes"]) // Add "detect_barcode" as a possible function value
         )
         .get_matches();
 
@@ -155,6 +209,29 @@ fn main() -> io::Result<()> {
     let mut sequence_lengths_all: Vec<u64> = Vec::new();
     let mut sequence_lengths_passed: Vec<u64> = Vec::new();
     let column_names = vec!["filename_pod5", "run_id", "experiment_id", "sample_id"];
+
+    if let Some(function) = matches.value_of("function") {
+        match function {
+            "detect_barcodes" => {
+                for (index, line) in reader.lines().enumerate() {
+                    let line = line?;
+                    let fields: Vec<&str> = line.split('\t').collect();
+                
+                    if index == 0 {
+                        sequence_length_index = fields.iter().position(|&x| x == "sequence_length_template");
+                        barcode_index = fields.iter().position(|&x| x == "barcode_arrangement");
+                        }
+                        continue;
+                    }
+                detect_barcodes(filename, barcode_index, sequence_length_index)?;
+                return Ok(());
+            }
+            _ => {
+                eprintln!("Invalid function specified.");
+                return Ok(());
+            }
+        }
+    }
 
     for (index, line) in reader.lines().enumerate() {
         let line = line?;
