@@ -1,6 +1,6 @@
 # summary_metrics
 
-This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequencing summary text files and calculate various statistics.
+This is a simple tool designed in Rust to analyze Oxford Nanopore Technologies sequencing summary text files and calculate various statistics.
 
 ## Features
 
@@ -17,6 +17,7 @@ This is a simple tool designed in Rust analyze Oxford Nanopore Technologies sequ
   - barcode (detected if present)
   - given length (provide statistics for reads meeting this criteria)
 - calculate basic read length statistics (mean, median)
+- can detect barcodes and provide information on reads and output per barcode (if barcodes are present)
 
 ## Prerequisites
 
@@ -144,6 +145,46 @@ find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'ech
 find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format json > my_output.json
 ```
 
+### Detecting barcodes
+
+If you have data that has been barcoded, or you want to see if there are barcodes present, then you can run `summary_metrics` with the `detect_barcodes` option, i.e.
+
+```bash
+./target/release/summary_metrics ./test/test_summary.txt detect_barcodes
+------------ Barcode Detection ------------
+Barcode      Reads         Bases           
+------------ ------------- ----------------
+-                   34,369                0
+barcode01       11,301,554  112,064,915,918
+barcode02              486        4,143,013
+barcode03              275        2,253,332
+barcode04              153        1,189,210
+barcode05            1,472       13,223,181
+barcode06              133          626,559
+barcode07               74          541,958
+barcode08               51          309,857
+barcode09              167        1,132,384
+barcode10              168        1,385,959
+barcode11               70          323,569
+barcode12              286        1,593,870
+barcode13              219        1,858,268
+barcode14               63          422,996
+barcode15              132        1,032,240
+barcode16              149        1,031,338
+barcode17               64          354,610
+barcode18            3,705       33,224,704
+barcode19              175        1,035,478
+barcode20              117          869,446
+barcode21              146          867,648
+barcode22              118          667,421
+barcode23              256        1,956,280
+barcode24              197        1,133,617
+unclassified     1,647,593   11,066,611,746
+------------------- Done ------------------
+```
+
+If present barcodes will be sorted on their barcode ID and you can examine the amount of reads and sequence data generated for each barcode.
+
 ## To Do
 
 - [X] ~~remove hard coded columns, use header values~~
@@ -152,6 +193,8 @@ find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'ech
 - [X] ~~extract info for flowcell, sample, experiment etc.~~
 - [X] ~~additional filtering options (user defined qscore)~~
 - [X] ~~work on error handling~~
+- [X] ~~add option to detect and provide info on present barcodes~~
+- [ ] add ability to provide barcode(s) to the tool
 - [ ] refactor the mess!
 - [ ] add --json output option
   - [ ] explore further customizable output formats
