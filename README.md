@@ -183,7 +183,7 @@ unclassified     1,647,593   11,066,611,746
 ------------------- Done ------------------
 ```
 
-If present barcodes will be sorted on their barcode ID and you can examine the amount of reads and sequence data generated for each barcode.
+If present, barcodes will be sorted on their barcode ID and you can examine the amount of reads and sequence data generated for each barcode.
 
 ## To Do
 
