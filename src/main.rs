@@ -286,6 +286,13 @@ fn main() -> io::Result<()> {
     }
     if let Some(n50) = calculate_n50(&sequence_lengths_all) {
         let n50_kb = n50 as f64 / 1000.0;
+
+        let total_long_sequences_passed_gb = sequence_lengths_passed
+        .iter()
+        .filter(|&&len| len >= min_length)
+        .sum::<u64>() as f64 / 1_000_000_000.0;
+
+        println!("Total >= {} bp (passed): {:.2} Gb", min_length, total_long_sequences_passed_gb);
         println!("{}", format!("N50 (total): {:.2} Kb", n50_kb).yellow().bold());
     } else {
         println!("No sequence length data found.");
