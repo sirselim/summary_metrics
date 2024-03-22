@@ -12,3 +12,4 @@ opt-level = 3
 colored = "2.0"
 clap = "3.0"
 num-format = "^0.4.0"
+prettytable = "^0.10.0"
