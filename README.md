@@ -110,13 +110,15 @@ Median read length (after filtering): 7387.00 bp
 If you want to process a collection of summary text files something like below can be useful:
 
 ```bash
-find ./target/dir -type f -name "sequencing_summary_*.txt" -print0 | xargs -0 -I{} sh -c 'echo "Processing {}"; ./target/release/summary_metrics {} --length 15000 --qscore 9.0'
+find ./target/dir -type f -name "sequencing_summary_*.txt" -print0 | \
+  xargs -0 -I{} sh -c 'echo "Processing {}"; ./target/release/summary_metrics {} --length 15000 --qscore 9.0'
 ```
 
 You can also use `gnu parallel` and provide a number of jobs/threads to process at once:
 
 ```bash
-find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000 --qscore 9.0'
+find ./target/dir -type f -name "sequencing_summary_*.txt" | \
+  parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000 --qscore 9.0'
 ```
 
 #### Outputting to table
@@ -129,21 +131,27 @@ can redirect the output (i.e. `> my_output.csv`). See below for specific example
 
 ```bash
 # output to markdown
-find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format md > my_output.md
+find ./target/dir -type f -name "sequencing_summary_*.txt" | \
+  parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | \
+  python3 ./table_generator.py --format md > my_output.md
 ```
 
 ##### CSV
 
 ```bash
 # output to csv
-find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format csv > my_output.csv
+find ./target/dir -type f -name "sequencing_summary_*.txt" | \
+  parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | \
+  python3 ./table_generator.py --format csv > my_output.csv
 ```
 
 ##### json
 
 ```bash
 # output to json
-find ./target/dir -type f -name "sequencing_summary_*.txt" | parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | python3 ./table_generator.py --format json > my_output.json
+find ./target/dir -type f -name "sequencing_summary_*.txt" | \
+  parallel -j 24 'echo -e "\nProcessing {}"; ./target/release/summary_metrics {} --length 15000' | \
+  python3 ./table_generator.py --format json > my_output.json
 ```
 
 ### Detecting barcodes
