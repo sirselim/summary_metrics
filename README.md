@@ -18,6 +18,7 @@ This is a simple tool designed in Rust to analyze Oxford Nanopore Technologies s
   - given length (provide statistics for reads meeting this criteria)
 - calculate basic read length statistics (mean, median)
 - can detect barcodes and provide information on reads and output per barcode (if barcodes are present)
+- the barcode function can be provided to generate summary statistics for all present barcodes
 
 ## Prerequisites
 
@@ -184,6 +185,55 @@ unclassified     1,647,593   11,066,611,746
 ```
 
 If present, barcodes will be sorted on their barcode ID and you can examine the amount of reads and sequence data generated for each barcode.
+
+### barcode summary
+
+You can generate general summary statistics for all present barcodes with `summary_metrics barcode`, i.e.
+
+```bash
+ ./target/release/summary_metrics ./test/test_summary.txt barcode
+------------------------------------- Barcode Summary --------------------------------------
+Barcode       Total Reads    Total Bases (Gb)   Passed Bases (Gb)    Passed Bases (15000 bp)
+------------  -------------  ----------------   -----------------    -----------------------
+barcode01     10,238,841     112.06             102.00               59.32                   
+barcode02     69             0.00               0.00                 0.00                    
+barcode03     43             0.00               0.00                 0.00                    
+barcode04     52             0.00               0.00                 0.00                    
+barcode05     134            0.01               0.00                 0.00                    
+barcode06     69             0.00               0.00                 0.00                    
+barcode07     13             0.00               0.00                 0.00                    
+barcode08     18             0.00               0.00                 0.00                    
+barcode09     52             0.00               0.00                 0.00                    
+barcode10     42             0.00               0.00                 0.00                    
+barcode11     28             0.00               0.00                 0.00                    
+barcode12     106            0.00               0.00                 0.00                    
+barcode13     51             0.00               0.00                 0.00                    
+barcode14     17             0.00               0.00                 0.00                    
+barcode15     17             0.00               0.00                 0.00                    
+barcode16     33             0.00               0.00                 0.00                    
+barcode17     20             0.00               0.00                 0.00                    
+barcode18     365            0.03               0.00                 0.00                    
+barcode19     55             0.00               0.00                 0.00                    
+barcode20     30             0.00               0.00                 0.00                    
+barcode21     63             0.00               0.00                 0.00                    
+barcode22     33             0.00               0.00                 0.00                    
+barcode23     41             0.00               0.00                 0.00                    
+barcode24     62             0.00               0.00                 0.00    
+unclassified  483,017        11.07              1.81                 0.73                    
+-------------------------------------------- Done ------------------------------------------
+```
+
+It's simple to 'clean up' the output table. We can use something like `grep`, i.e.
+
+```bash
+./target/release/summary_metrics ./test/test_summary.txt barcode | grep -v '0.00'
+------------------------------------- Barcode Summary --------------------------------------
+Barcode       Total Reads    Total Bases (Gb)   Passed Bases (Gb)    Passed Bases (15000 bp)
+------------  -------------  ----------------   -----------------    -----------------------
+barcode01     10,238,841     112.06             102.00               59.32                   
+unclassified  483,017        11.07              1.81                 0.73                    
+-------------------------------------------- Done ------------------------------------------
+```
 
 ## To Do
 

@@ -144,6 +144,81 @@ fn detect_barcodes(filename: &str, barcode_index: Option<usize>, sequence_length
     Ok(())
 }
 
+// function to process all identified barcodes
+fn barcode(filename: &str, qscore_threshold: f64, length_threshold: u64) -> io::Result<()> {
+    let file = File::open(filename)?;
+    let reader = io::BufReader::new(file);
+
+    let mut barcode_counts: HashMap<String, (u32, u64, u64, u64, f64)> = HashMap::new();
+
+    let mut barcode_index = None;
+    let mut mean_qscore_index = None;
+    let mut sequence_length_index = None;
+
+    // Iterate over each line in the file
+    for (index, line) in reader.lines().enumerate() {
+        let line = line?;
+        let fields: Vec<&str> = line.split('\t').collect();
+
+        if index == 0 {
+            // Find the indices of required columns
+            mean_qscore_index = fields.iter().position(|&x| x == "mean_qscore_template");
+            sequence_length_index = fields.iter().position(|&x| x == "sequence_length_template");
+            barcode_index = fields.iter().position(|&x| x == "barcode_arrangement");
+            continue;
+        }
+
+        // Ensure required indices are found
+        if let (Some(barcode_idx), Some(mean_qscore_idx), Some(seq_len_idx)) =
+            (barcode_index, mean_qscore_index, sequence_length_index)
+        {
+            if let (Some(barcode_arrangement), Some(passes_filtering), Some(seq_len_str)) =
+                (fields.get(barcode_idx), fields.get(mean_qscore_idx), fields.get(seq_len_idx))
+            {
+                // Convert sequence length and qscore to appropriate types
+                let seq_len: u64 = seq_len_str.parse().unwrap_or(0);
+                let qscore: f64 = passes_filtering.parse().unwrap_or(0.0);
+
+                // If qscore meets threshold, update barcode counts
+                if qscore >= qscore_threshold {
+                    let (reads, bases, passed_bases, passed_bases_filtered, passed_bases_gb) = barcode_counts
+                        .entry(barcode_arrangement.to_string())
+                        .or_insert((0, 0, 0, 0, 0.0));
+                    *reads += 1;
+                    *bases += seq_len;
+                    *passed_bases += seq_len;
+                    if seq_len >= length_threshold {
+                        *passed_bases_filtered += seq_len;
+                        *passed_bases_gb = *passed_bases_filtered as f64 / 1_000_000_000.0;
+                    }
+                } else {
+                    // If qscore doesn't meet threshold, update total bases only
+                    if let Some((_, total_bases, _, _, _)) = barcode_counts.get_mut(&barcode_arrangement[..]) {
+                        *total_bases += seq_len;
+                    }
+                }
+            }
+        }
+    }
+
+    // Sort barcodes by name
+    let mut sorted_barcodes: Vec<_> = barcode_counts.into_iter().collect();
+    sorted_barcodes.sort_by(|(barcode1, _), (barcode2, _)| barcode1.cmp(barcode2));
+
+    // Print the results in a table format
+    println!("------------------------------------- Barcode Summary --------------------------------------");
+    println!("{}", format!("{:<13} {:<14} {:<18} {:<20} {:<23}", "Barcode", "Total Reads", "Total Bases (Gb)", "Passed Bases (Gb)", &format!("Passed Bases ({} bp)", length_threshold)).yellow().bold());
+    println!("{:<13} {:<14} {:<18} {:<20} {:<23}", "------------", "-------------", "----------------", "-----------------", "-----------------------");
+    for (barcode, (reads, total_bases, passed_bases, _, passed_bases_gb)) in sorted_barcodes {
+        let total_gb = total_bases as f64 / 1_000_000_000.0;
+        let passed_gb = passed_bases as f64 / 1_000_000_000.0;
+        println!("{:<13} {:<14} {:<18.2} {:<20.2} {:<23.2} ", barcode, reads.to_formatted_string(&Locale::en), total_gb, passed_gb, passed_bases_gb);
+    }
+    println!("-------------------------------------------- Done ------------------------------------------");
+
+    Ok(())
+}
+
 // main
 fn main() -> io::Result<()> {
     let matches = App::new("summary_metrics")
@@ -174,10 +249,12 @@ fn main() -> io::Result<()> {
         )
         .arg(
             Arg::with_name("function")
-                .help("Auxillary functions to execute.\n `detect_barcodes` will identify and output barcode count and total amount of sequence of each.")
+                .help(&*["Auxiliary functions to execute.\n ", &"detect_barcodes".cyan().to_string(), " will \
+                identify and output barcode count and total amount of sequence of each.\n ", &"barcode".cyan().to_string(), " \
+                 will take a barcode id and provide summary metrics for it."].concat())
                 .required(false)
                 .index(2)
-                .possible_values(&["detect_barcodes"])
+                .possible_values(&["detect_barcodes", "barcode"])
         )
         .get_matches();
 
@@ -226,6 +303,10 @@ fn main() -> io::Result<()> {
                         continue;
                     }
                 detect_barcodes(filename, barcode_index, sequence_length_index)?;
+                return Ok(());
+            }
+            "barcode" => {
+                barcode(filename, qscore, min_length)?;
                 return Ok(());
             }
             _ => {
