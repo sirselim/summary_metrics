@@ -30,8 +30,8 @@ You are welcome to download and try the pre-compiled binaries (info below). If y
 
 ### pre-compiled binaries
 
-- [summary_metrics-0.1.5-linux-x64](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.5-linux-x64.tar.gz)
-- [summary_metrics-0.1.5-osx-arm](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.5-osx-arm64.tar.gz)
+- [summary_metrics-0.1.7-linux-x64](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.7-linux-x64.tar.gz)
+- [summary_metrics-0.1.7-osx-arm](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.7-osx-arm64.tar.gz)
 
 ### From source
 
