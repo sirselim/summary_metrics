@@ -149,7 +149,7 @@ fn barcode(filename: &str, qscore_threshold: f64, length_threshold: u64) -> io::
     let file = File::open(filename)?;
     let reader = io::BufReader::new(file);
 
-    let mut barcode_counts: HashMap<String, (u32, u64, u64, u64, f64)> = HashMap::new();
+    let mut barcode_counts: HashMap<String, (u32, u32, u64, u64, u64, f64)> = HashMap::new(); // Modify to include an additional u32 for total reads before filtering
 
     let mut barcode_index = None;
     let mut mean_qscore_index = None;
@@ -181,10 +181,11 @@ fn barcode(filename: &str, qscore_threshold: f64, length_threshold: u64) -> io::
 
                 // If qscore meets threshold, update barcode counts
                 if qscore >= qscore_threshold {
-                    let (reads, bases, passed_bases, passed_bases_filtered, passed_bases_gb) = barcode_counts
+                    let (reads, total_reads, bases, passed_bases, passed_bases_filtered, passed_bases_gb) = barcode_counts
                         .entry(barcode_arrangement.to_string())
-                        .or_insert((0, 0, 0, 0, 0.0));
+                        .or_insert((0, 0, 0, 0, 0, 0.0)); // Modify to include an additional 0 for total reads before filtering
                     *reads += 1;
+                    *total_reads += 1; // Increment total reads before filtering
                     *bases += seq_len;
                     *passed_bases += seq_len;
                     if seq_len >= length_threshold {
@@ -193,7 +194,8 @@ fn barcode(filename: &str, qscore_threshold: f64, length_threshold: u64) -> io::
                     }
                 } else {
                     // If qscore doesn't meet threshold, update total bases only
-                    if let Some((_, total_bases, _, _, _)) = barcode_counts.get_mut(&barcode_arrangement[..]) {
+                    if let Some((_, total_reads, total_bases, _, _, _)) = barcode_counts.get_mut(&barcode_arrangement[..]) {
+                        *total_reads += 1; // Increment total reads before filtering
                         *total_bases += seq_len;
                     }
                 }
@@ -206,15 +208,15 @@ fn barcode(filename: &str, qscore_threshold: f64, length_threshold: u64) -> io::
     sorted_barcodes.sort_by(|(barcode1, _), (barcode2, _)| barcode1.cmp(barcode2));
 
     // Print the results in a table format
-    println!("------------------------------------- Barcode Summary --------------------------------------");
-    println!("{}", format!("{:<13} {:<14} {:<18} {:<20} {:<23}", "Barcode", "Total Reads", "Total Bases (Gb)", "Passed Bases (Gb)", &format!("Passed Bases ({} bp)", length_threshold)).yellow().bold());
-    println!("{:<13} {:<14} {:<18} {:<20} {:<23}", "------------", "-------------", "----------------", "-----------------", "-----------------------");
-    for (barcode, (reads, total_bases, passed_bases, _, passed_bases_gb)) in sorted_barcodes {
+    println!("------------------------------------------------- Barcode Summary -------------------------------------------------");
+    println!("{}", format!("{:<14} {:<14} {:<21} {:<19} {:<19} {:<22}", "Barcode", "Total Reads", "Total Reads (passed)", "Total Bases (Gb)", "Passed Bases (Gb)", &format!("Passed Bases ({} bp)", length_threshold)).yellow().bold());
+    println!("{:<14} {:<14} {:<21} {:<19} {:<19} {:<22}", "------------", "------------", "--------------------", "----------------", "-----------------", "-----------------------");
+    for (barcode, (reads, total_reads, total_bases, passed_bases, _, passed_bases_gb)) in sorted_barcodes {
         let total_gb = total_bases as f64 / 1_000_000_000.0;
         let passed_gb = passed_bases as f64 / 1_000_000_000.0;
-        println!("{:<13} {:<14} {:<18.2} {:<20.2} {:<23.2} ", barcode, reads.to_formatted_string(&Locale::en), total_gb, passed_gb, passed_bases_gb);
+        println!("{:<14} {:<14} {:<21} {:<19.2} {:<19.2} {:<22.2}", barcode, total_reads.to_formatted_string(&Locale::en), reads.to_formatted_string(&Locale::en), total_gb, passed_gb, passed_bases_gb); // Modify to include an additional {:<19} for total reads before filtering
     }
-    println!("-------------------------------------------- Done ------------------------------------------");
+    println!("-------------------------------------------------------- Done -----------------------------------------------------");
 
     Ok(())
 }
