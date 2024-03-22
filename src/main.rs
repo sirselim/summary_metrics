@@ -216,7 +216,7 @@ fn barcode(filename: &str, qscore_threshold: f64, length_threshold: u64) -> io::
         let passed_gb = passed_bases as f64 / 1_000_000_000.0;
         println!("{:<14} {:<14} {:<21} {:<19.2} {:<19.2} {:<22.2}", barcode, total_reads.to_formatted_string(&Locale::en), reads.to_formatted_string(&Locale::en), total_gb, passed_gb, passed_bases_gb); // Modify to include an additional {:<19} for total reads before filtering
     }
-    println!("-------------------------------------------------------- Done -----------------------------------------------------");
+    println!("-------------------------------------------------------- Done ------------------------------------------");
 
     Ok(())
 }
