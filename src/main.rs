@@ -404,20 +404,20 @@ fn main() -> io::Result<()> {
         eprintln!("Warning: No identifying information located in sequencing summary file.");
     }
     println!();
-    println!("Total reads: {}", total_line_count);
-    println!("Total passed reads: {}", passing_read_counts);
+    println!("Total reads: {}", total_line_count.to_formatted_string(&Locale::en));
+    println!("Total passed reads: {}", passing_read_counts.to_formatted_string(&Locale::en));
     println!();
 
     // Print barcode information only if barcode_arrangement column is present
     if barcode_index.is_some() {
         if let Some((max_barcode, max_count)) = total_barcode_counts.iter().max_by_key(|&(_, count)| count) {
-            println!("Detected barcode (total): {} (count: {})", max_barcode.green().bold(), max_count);
+            println!("Detected barcode (total): {} (count: {})", max_barcode.green().bold(), max_count.to_formatted_string(&Locale::en));
         } else {
             println!("No barcode data found in the file.");
         }
 
         if let Some((max_barcode, max_count)) = passing_barcode_counts.iter().max_by_key(|&(_, count)| count) {
-            println!("Detected barcode (passed): {} (count: {})", max_barcode.green().bold(), max_count);
+            println!("Detected barcode (passed): {} (count: {})", max_barcode.green().bold(), max_count.to_formatted_string(&Locale::en));
         } else {
             println!("No barcode data found in the passed reads.");
         }
