@@ -81,27 +81,27 @@ You should see output similar to below:
 > ./target/release/summary_metrics ../summary_simulator/sequencing_summary_sim_data.txt --length 20000 --qscore 10.0
 
 ----------------------- Summary Metrics -----------------------
-Flowcell ID: PAU02321
-Run ID: f28b19103a1ace40d6afbd35638193fb1a25b699
-Experiment ID: 2024_Mar03_test
-Sample ID: dummy_data
+Flowcell ID: PAU02665
+Run ID: f28b19102a1ace40d9afbd35634193fb1a25b699
+Experiment ID: 2023_Apr21_plate2
+Sample ID: BC01_F1
 
-Total reads: 1000000
-Total passed reads: 888805
+Total reads: 13,019,341
+Total passed reads: 10,727,726
 
-Detected barcode (total): barcode02 (count: 850103)
-Detected barcode (passed): barcode02 (count: 755502)
+Detected barcode (total): barcode01 (count: 11,301,554)
+Detected barcode (passed): barcode01 (count: 10,238,841)
 
-Total output: 9.99 Gb
-Total output (passed): 8.88 Gb
-Total output (passed, barcode): 7.55 Gb
-Total >= 20000 bp (passed, barcode): 3.94 Gb
-N50 (total): 15.65 Kb
+Total output: 123.42 Gb
+Total output (passed): 103.84 Gb
+Total output (passed, barcode): 102.00 Gb
+Total >= 15000 bp (passed, barcode): 59.31 Gb
+N50 (total): 17.29 Kb
 
-Mean read length (before filtering): 9993.77 bp
-Median read length (before filtering): 7390.00 bp
-Mean read length (after filtering): 9990.51 bp
-Median read length (after filtering): 7387.00 bp
+Mean read length (before filtering): 9479.63 bp
+Median read length (before filtering): 5871.00 bp
+Mean read length (after filtering): 9679.74 bp
+Median read length (after filtering): 6038.00 bp
 ---------------------------- Done -----------------------------
 ```
 
