@@ -17,8 +17,8 @@ This is a simple tool designed in Rust to analyze Oxford Nanopore Technologies s
   - barcode (detected if present)
   - given length (provide statistics for reads meeting this criteria)
 - calculate basic read length statistics (mean, median)
-- can detect barcodes and provide information on reads and output per barcode (if barcodes are present)
 - the barcode function can be provided to generate summary statistics for all present barcodes
+  - this information can be output to a csv file using the `--csv` option with `barcode`
 
 ## Prerequisites
 
@@ -30,8 +30,8 @@ You are welcome to download and try the pre-compiled binaries (info below). If y
 
 ### pre-compiled binaries
 
-- [summary_metrics-0.1.6-linux-x64](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.6-linux-x64.tar.gz)
-- [summary_metrics-0.1.6-osx-arm](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.6-osx-arm64.tar.gz)
+- [summary_metrics-0.1.7-linux-x64](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.7-linux-x64.tar.gz)
+- [summary_metrics-0.1.7-osx-arm](https://github.com/sirselim/summary_metrics/raw/main/binaries/summary_metrics-0.1.7-osx-arm64.tar.gz)
 
 ### From source
 
@@ -81,27 +81,27 @@ You should see output similar to below:
 > ./target/release/summary_metrics ../summary_simulator/sequencing_summary_sim_data.txt --length 20000 --qscore 10.0
 
 ----------------------- Summary Metrics -----------------------
-Flowcell ID: PAU02321
-Run ID: f28b19103a1ace40d6afbd35638193fb1a25b699
-Experiment ID: 2024_Mar03_test
-Sample ID: dummy_data
+Flowcell ID: PAU02665
+Run ID: f28b19102a1ace40d9afbd35634193fb1a25b699
+Experiment ID: 2023_Apr21_plate2
+Sample ID: BC01_F1
 
-Total reads: 1000000
-Total passed reads: 888805
+Total reads: 13,019,341
+Total passed reads: 10,727,726
 
-Detected barcode (total): barcode02 (count: 850103)
-Detected barcode (passed): barcode02 (count: 755502)
+Detected barcode (total): barcode01 (count: 11,301,554)
+Detected barcode (passed): barcode01 (count: 10,238,841)
 
-Total output: 9.99 Gb
-Total output (passed): 8.88 Gb
-Total output (passed, barcode): 7.55 Gb
-Total >= 20000 bp (passed, barcode): 3.94 Gb
-N50 (total): 15.65 Kb
+Total output: 123.42 Gb
+Total output (passed): 103.84 Gb
+Total output (passed, barcode): 102.00 Gb
+Total >= 15000 bp (passed, barcode): 59.31 Gb
+N50 (total): 17.29 Kb
 
-Mean read length (before filtering): 9993.77 bp
-Median read length (before filtering): 7390.00 bp
-Mean read length (after filtering): 9990.51 bp
-Median read length (after filtering): 7387.00 bp
+Mean read length (before filtering): 9479.63 bp
+Median read length (before filtering): 5871.00 bp
+Mean read length (after filtering): 9679.74 bp
+Median read length (after filtering): 6038.00 bp
 ---------------------------- Done -----------------------------
 ```
 
@@ -154,94 +154,64 @@ find ./target/dir -type f -name "sequencing_summary_*.txt" | \
   python3 ./table_generator.py --format json > my_output.json
 ```
 
-### Detecting barcodes
+### Detecting barcodes and get summary metrics
 
-If you have data that has been barcoded, or you want to see if there are barcodes present, then you can run `summary_metrics` with the `detect_barcodes` option, i.e.
-
-```bash
-./target/release/summary_metrics ./test/test_summary.txt detect_barcodes
------------- Barcode Detection ------------
-Barcode      Reads         Bases           
------------- ------------- ----------------
--                   34,369                0
-barcode01       11,301,554  112,064,915,918
-barcode02              486        4,143,013
-barcode03              275        2,253,332
-barcode04              153        1,189,210
-barcode05            1,472       13,223,181
-barcode06              133          626,559
-barcode07               74          541,958
-barcode08               51          309,857
-barcode09              167        1,132,384
-barcode10              168        1,385,959
-barcode11               70          323,569
-barcode12              286        1,593,870
-barcode13              219        1,858,268
-barcode14               63          422,996
-barcode15              132        1,032,240
-barcode16              149        1,031,338
-barcode17               64          354,610
-barcode18            3,705       33,224,704
-barcode19              175        1,035,478
-barcode20              117          869,446
-barcode21              146          867,648
-barcode22              118          667,421
-barcode23              256        1,956,280
-barcode24              197        1,133,617
-unclassified     1,647,593   11,066,611,746
-------------------- Done ------------------
-```
-
-If present, barcodes will be sorted on their barcode ID and you can examine the amount of reads and sequence data generated for each barcode.
-
-### barcode summary
+If you have data that has been barcoded, or you want to see if there are barcodes present, then you can run `summary_metrics` with the `barcode` option. If present, barcodes will be sorted on their barcode ID and you can examine the amount of reads and sequence data generated for each barcode.
 
 You can generate general summary statistics for all present barcodes with `summary_metrics barcode`, i.e.
 
 ```bash
  ./target/release/summary_metrics ./test/test_summary.txt barcode
-------------------------------------------------- Barcode Summary -------------------------------------------------
-Barcode        Total Reads    Total Reads (passed)  Total Bases (Gb)    Passed Bases (Gb)   Passed Bases (15000 bp)
-------------   ------------   --------------------  ----------------    -----------------   -----------------------
-barcode01      11,301,554     10,238,841            112.06              102.00              59.32                 
-barcode02      484            69                    0.00                0.00                0.00                  
-barcode03      259            43                    0.00                0.00                0.00                  
-barcode04      146            52                    0.00                0.00                0.00                  
-barcode05      1,463          134                   0.01                0.00                0.00                  
-barcode06      129            69                    0.00                0.00                0.00                  
-barcode07      54             13                    0.00                0.00                0.00                  
-barcode08      38             18                    0.00                0.00                0.00                  
-barcode09      149            52                    0.00                0.00                0.00                  
-barcode10      162            42                    0.00                0.00                0.00                  
-barcode11      64             28                    0.00                0.00                0.00                  
-barcode12      276            106                   0.00                0.00                0.00                  
-barcode13      213            51                    0.00                0.00                0.00                  
-barcode14      59             17                    0.00                0.00                0.00                  
-barcode15      127            17                    0.00                0.00                0.00                  
-barcode16      147            33                    0.00                0.00                0.00                  
-barcode17      62             20                    0.00                0.00                0.00                  
-barcode18      3,704          365                   0.03                0.00                0.00                  
-barcode19      172            55                    0.00                0.00                0.00                  
-barcode20      116            30                    0.00                0.00                0.00                  
-barcode21      146            63                    0.00                0.00                0.00                  
-barcode22      109            33                    0.00                0.00                0.00                  
-barcode23      255            41                    0.00                0.00                0.00                  
-barcode24      187            62                    0.00                0.00                0.00  
-unclassified   1,647,593      483,017               11.07               1.81                0.73                  
--------------------------------------------------------- Done -----------------------------------------------------
++--------------+-------------+----------------------+------------------+-------------------+------------------------------+
+| Barcode      | Total Reads | Total Reads (passed) | Total Bases (Gb) | Passed Bases (Gb) | Passed Bases > 15000 bp (Gb) |
+| barcode01    | 11,301,554  | 10,238,841           | 112.06           | 102.00            | 59.32                        |
+| barcode02    | 484         | 69                   | 0.00             | 0.00              | 0.00                         |
+| barcode03    | 259         | 43                   | 0.00             | 0.00              | 0.00                         |
+| barcode04    | 146         | 52                   | 0.00             | 0.00              | 0.00                         |
+| barcode05    | 1,463       | 134                  | 0.01             | 0.00              | 0.00                         |
+| barcode06    | 129         | 69                   | 0.00             | 0.00              | 0.00                         |
+| barcode07    | 54          | 13                   | 0.00             | 0.00              | 0.00                         |
+| barcode08    | 38          | 18                   | 0.00             | 0.00              | 0.00                         |
+| barcode09    | 149         | 52                   | 0.00             | 0.00              | 0.00                         |
+| barcode10    | 162         | 42                   | 0.00             | 0.00              | 0.00                         |
+| barcode11    | 64          | 28                   | 0.00             | 0.00              | 0.00                         |
+| barcode12    | 276         | 106                  | 0.00             | 0.00              | 0.00                         |
+| barcode13    | 213         | 51                   | 0.00             | 0.00              | 0.00                         |
+| barcode14    | 59          | 17                   | 0.00             | 0.00              | 0.00                         |
+| barcode15    | 127         | 17                   | 0.00             | 0.00              | 0.00                         |
+| barcode16    | 147         | 33                   | 0.00             | 0.00              | 0.00                         |
+| barcode17    | 62          | 20                   | 0.00             | 0.00              | 0.00                         |
+| barcode18    | 3,704       | 365                  | 0.03             | 0.00              | 0.00                         |
+| barcode19    | 172         | 55                   | 0.00             | 0.00              | 0.00                         |
+| barcode20    | 116         | 30                   | 0.00             | 0.00              | 0.00                         |
+| barcode21    | 146         | 63                   | 0.00             | 0.00              | 0.00                         |
+| barcode22    | 109         | 33                   | 0.00             | 0.00              | 0.00                         |
+| barcode23    | 255         | 41                   | 0.00             | 0.00              | 0.00                         |
+| barcode24    | 187         | 62                   | 0.00             | 0.00              | 0.00                         |
+| unclassified | 1,647,593   | 483,017              | 11.07            | 1.81              | 0.73                         |
++--------------+-------------+----------------------+------------------+-------------------+------------------------------+
 ```
 
 It's simple to 'clean up' the output table. We can use something like `grep`, i.e.
 
 ```bash
 ./target/release/summary_metrics ./test/test_summary.txt barcode | grep -v '0.00'
-------------------------------------------------- Barcode Summary -------------------------------------------------
-Barcode        Total Reads    Total Reads (passed)  Total Bases (Gb)    Passed Bases (Gb)   Passed Bases (15000 bp)
-------------   ------------   --------------------  ----------------    -----------------   -----------------------
-barcode01      11,301,554     10,238,841            112.06              102.00              59.32                 
-unclassified   1,647,593      483,017               11.07               1.81                0.73                  
--------------------------------------------------------- Done -----------------------------------------------------
++--------------+-------------+----------------------+------------------+-------------------+------------------------------+
+| Barcode      | Total Reads | Total Reads (passed) | Total Bases (Gb) | Passed Bases (Gb) | Passed Bases > 15000 bp (Gb) |
+| barcode01    | 11,301,554  | 10,238,841           | 112.06           | 102.00            | 59.32                        |
+| unclassified | 1,647,593   | 483,017              | 11.07            | 1.81              | 0.73                         |
++--------------+-------------+----------------------+------------------+-------------------+------------------------------+
 ```
+
+#### output to csv
+
+You can output the barcode summary table to a csv file, i.e.
+
+```bash
+./target/release/summary_metrics ./test/test_summary.txt barcode --csv
+```
+
+This will generate a csv file that has the original file name with `_barcode_summary.csv` appended. It will be in the same directory as the input data.
 
 ## To Do
 

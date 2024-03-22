@@ -5,6 +5,8 @@ use std::io::{self, BufRead};
 use colored::*;
 use clap::{App, Arg};
 use num_format::{Locale, ToFormattedString};
+use prettytable::{Table, row, format};
+use std::path::{Path, PathBuf};
 
 // function to locate and extract flowcell id from different locations
 fn extract_ids(filename: &str, column_names: Vec<&str>) -> Option<Vec<Option<String>>> {
@@ -98,54 +100,8 @@ fn calculate_median(read_lengths: &mut [u64]) -> f64 {
     }
 }
 
-// Function to detect barcodes and report the sum of read lengths
-fn detect_barcodes(filename: &str, barcode_index: Option<usize>, sequence_length_index: Option<usize>) -> io::Result<()> {
-    let file = File::open(filename)?;
-    let reader = io::BufReader::new(file);
-
-    let mut barcode_counts: HashMap<String, (u32, u64)> = HashMap::new();
-
-    for line in reader.lines().skip(1) {
-        let line = line?;
-        let fields: Vec<&str> = line.split('\t').collect();
-
-        if let Some(barcode_idx) = barcode_index {
-            if let Some(barcode_arrangement) = fields.get(barcode_idx) {
-                // Convert sequence length to u64
-                let read_length: u64 = if let Some(seq_len_idx) = sequence_length_index {
-                    if let Some(seq_len_str) = fields.get(seq_len_idx) {
-                        seq_len_str.parse().unwrap_or(0)
-                    } else {
-                        0
-                    }
-                } else {
-                    0
-                };
-
-                let (reads, bases) = barcode_counts.entry(barcode_arrangement.to_string()).or_insert((0, 0));
-                *reads += 1;
-                *bases += read_length;
-            }
-        }
-    }
-
-    // Sort barcodes by name
-    let mut sorted_barcodes: Vec<_> = barcode_counts.into_iter().collect();
-    sorted_barcodes.sort_by(|(barcode1, _), (barcode2, _)| barcode1.cmp(barcode2));
-
-    // Print the results in a table format
-    println!("------------ Barcode Detection ------------");
-    println!("{}", format!("{:<12} {:<13} {:<16}", "Barcode", "Reads", "Bases").yellow().bold());
-    println!("{:<12} {:<13} {:<16}", "------------", "-------------", "----------------");
-    for (barcode, (reads, bases)) in sorted_barcodes {
-        println!("{:<12} {:>13} {:>16}", barcode, reads.to_formatted_string(&Locale::en), bases.to_formatted_string(&Locale::en));
-    }
-    println!("------------------- Done ------------------");
-    Ok(())
-}
-
 // function to process all identified barcodes
-fn barcode(filename: &str, qscore_threshold: f64, length_threshold: u64) -> io::Result<()> {
+fn barcode(filename: &str, qscore_threshold: f64, length_threshold: u64, output_csv: bool) -> io::Result<()> {
     let file = File::open(filename)?;
     let reader = io::BufReader::new(file);
 
@@ -207,16 +163,56 @@ fn barcode(filename: &str, qscore_threshold: f64, length_threshold: u64) -> io::
     let mut sorted_barcodes: Vec<_> = barcode_counts.into_iter().collect();
     sorted_barcodes.sort_by(|(barcode1, _), (barcode2, _)| barcode1.cmp(barcode2));
 
-    // Print the results in a table format
-    println!("------------------------------------------------- Barcode Summary -------------------------------------------------");
-    println!("{}", format!("{:<14} {:<14} {:<21} {:<19} {:<19} {:<22}", "Barcode", "Total Reads", "Total Reads (passed)", "Total Bases (Gb)", "Passed Bases (Gb)", &format!("Passed Bases ({} bp)", length_threshold)).yellow().bold());
-    println!("{:<14} {:<14} {:<21} {:<19} {:<19} {:<22}", "------------", "------------", "--------------------", "----------------", "-----------------", "-----------------------");
+    // Print the results in a table format - using pretty table crate
+    let mut table = Table::new();
+    // let format = format::FormatBuilder::new()
+    //     .column_separator('|')
+    //     .borders('|')
+    //     .separators(&[format::LinePosition::Top,
+    //                   format::LinePosition::Bottom],
+    //                 format::LineSeparator::new('-', '+', '+', '+'))
+    //     .padding(1, 1)
+    //     .build();
+    // table.set_format(format);
+    table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+    table.add_row(row![FY => "Barcode", "Total Reads", "Total Reads (passed)", "Total Bases (Gb)", "Passed Bases (Gb)", &format!("Passed Bases > {} bp (Gb)", length_threshold)]);
+
     for (barcode, (reads, total_reads, total_bases, passed_bases, _, passed_bases_gb)) in sorted_barcodes {
         let total_gb = total_bases as f64 / 1_000_000_000.0;
         let passed_gb = passed_bases as f64 / 1_000_000_000.0;
-        println!("{:<14} {:<14} {:<21} {:<19.2} {:<19.2} {:<22.2}", barcode, total_reads.to_formatted_string(&Locale::en), reads.to_formatted_string(&Locale::en), total_gb, passed_gb, passed_bases_gb); // Modify to include an additional {:<19} for total reads before filtering
+        table.add_row(row![
+            barcode,
+            total_reads.to_formatted_string(&Locale::en),
+            reads.to_formatted_string(&Locale::en),
+            format!("{:.2}", total_gb),
+            format!("{:.2}", passed_gb),
+            format!("{:.2}", passed_bases_gb)
+        ]);
     }
-    println!("------------------------------------------------------ Done -------------------------------------------------------");
+
+    if !output_csv {
+        table.printstd();
+    }
+
+    // TO-DO: implement an option for user to provide output directory
+    // Output to CSV if the --csv option is present
+    if output_csv {
+        let input_path = Path::new(filename);
+        let parent_dir = input_path.parent().unwrap_or_else(|| Path::new("")); // Get the parent directory of the input file
+
+        let mut csv_filename = input_path.file_name().unwrap().to_string_lossy().to_string();
+        if csv_filename.ends_with(".txt") {
+            csv_filename = csv_filename.trim_end_matches(".txt").to_string();
+        }
+        csv_filename = format!("{}_barcode_summary.csv", csv_filename);
+
+        let csv_file_path = PathBuf::from(parent_dir).join(csv_filename); // Create the full path for the CSV file
+
+        println!("CSV file generated: {}", csv_file_path.display());
+
+        let out = File::create(&csv_file_path)?; // Create the CSV file in the same directory as the input file
+        table.to_csv(out)?;
+    }
 
     Ok(())
 }
@@ -251,12 +247,17 @@ fn main() -> io::Result<()> {
         )
         .arg(
             Arg::with_name("function")
-                .help(&*["Auxiliary functions to execute.\n ", &"detect_barcodes".cyan().to_string(), " will \
-                identify and output barcode count and total amount of sequence of each.\n ", &"barcode".cyan().to_string(), " \
-                 will take a barcode id and provide summary metrics for it."].concat())
+                .help(&*["- ", &"barcode".cyan().to_string(), " \
+                 will identify all present barcodes and provide summary metrics for them.\n"].concat())
                 .required(false)
                 .index(2)
-                .possible_values(&["detect_barcodes", "barcode"])
+                .possible_values(&["barcode"])
+        )
+        .arg(
+            Arg::with_name("csv")
+                .short('o')
+                .long("csv")
+                .help("Output the barcode table to CSV"),
         )
         .get_matches();
 
@@ -291,24 +292,13 @@ fn main() -> io::Result<()> {
     let mut sequence_lengths_passed: Vec<u64> = Vec::new();
     let column_names = vec!["filename_pod5", "run_id", "experiment_id", "sample_id"];
 
+    // Parse the --csv option
+    let output_csv = matches.is_present("csv");
+
     if let Some(function) = matches.value_of("function") {
         match function {
-            "detect_barcodes" => {
-                for (index, line) in reader.lines().enumerate() {
-                    let line = line?;
-                    let fields: Vec<&str> = line.split('\t').collect();
-                
-                    if index == 0 {
-                        sequence_length_index = fields.iter().position(|&x| x == "sequence_length_template");
-                        barcode_index = fields.iter().position(|&x| x == "barcode_arrangement");
-                        }
-                        continue;
-                    }
-                detect_barcodes(filename, barcode_index, sequence_length_index)?;
-                return Ok(());
-            }
             "barcode" => {
-                barcode(filename, qscore, min_length)?;
+                barcode(filename, qscore, min_length, output_csv)?;
                 return Ok(());
             }
             _ => {
@@ -414,20 +404,20 @@ fn main() -> io::Result<()> {
         eprintln!("Warning: No identifying information located in sequencing summary file.");
     }
     println!();
-    println!("Total reads: {}", total_line_count);
-    println!("Total passed reads: {}", passing_read_counts);
+    println!("Total reads: {}", total_line_count.to_formatted_string(&Locale::en));
+    println!("Total passed reads: {}", passing_read_counts.to_formatted_string(&Locale::en));
     println!();
 
     // Print barcode information only if barcode_arrangement column is present
     if barcode_index.is_some() {
         if let Some((max_barcode, max_count)) = total_barcode_counts.iter().max_by_key(|&(_, count)| count) {
-            println!("Detected barcode (total): {} (count: {})", max_barcode.green().bold(), max_count);
+            println!("Detected barcode (total): {} (count: {})", max_barcode.green().bold(), max_count.to_formatted_string(&Locale::en));
         } else {
             println!("No barcode data found in the file.");
         }
 
         if let Some((max_barcode, max_count)) = passing_barcode_counts.iter().max_by_key(|&(_, count)| count) {
-            println!("Detected barcode (passed): {} (count: {})", max_barcode.green().bold(), max_count);
+            println!("Detected barcode (passed): {} (count: {})", max_barcode.green().bold(), max_count.to_formatted_string(&Locale::en));
         } else {
             println!("No barcode data found in the passed reads.");
         }
